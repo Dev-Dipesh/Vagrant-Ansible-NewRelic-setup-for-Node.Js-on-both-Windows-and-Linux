@@ -102,7 +102,7 @@
     - name: ensure newrelic-sysmond is installed
       action: apt pkg=newrelic-sysmond state=installed
     - name: update newrelic nrsysmond.cfg with license key
-      command: nrsysmond-config --set license_key=77766a2c60abd0f3d827ae258070cb9152e3254f
+      command: nrsysmond-config --set license_key=YOUR_RELIC_KEY
     - name: start newrelic-sysmond
       command: /etc/init.d/newrelic-sysmond start state=started  
 
