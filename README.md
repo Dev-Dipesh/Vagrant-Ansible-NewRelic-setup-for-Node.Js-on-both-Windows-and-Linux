@@ -45,3 +45,15 @@ Ansible Setup
 =======
  **NOTE: Remember to add your New Relic key in Ansible `playbook.yml`**
 >>>>>>> 3fd382f71dafdbb97c14f0a0dcf79e4c0f3e475e
+
+ANSIBLE PROVISIONING
+--------------------
+![Alt](https://raw.githubusercontent.com/Dev-Dipesh/Vagrant-Ansible-NewRelic-setup-for-Node.Js-on-both-Windows-and-Linux/master/img/Ansible%20Server%20Box%20Setup.png)
+
+SYSTEM MONITORING IN NEW RELIC
+------------------------------
+![Alt](https://raw.githubusercontent.com/Dev-Dipesh/Vagrant-Ansible-NewRelic-setup-for-Node.Js-on-both-Windows-and-Linux/master/img/2014-09-10%2013_58_02-local%20-%20New%20Relic.png)
+
+NODE APPLICATION RUNNING
+------------------------
+![Alt](https://raw.githubusercontent.com/Dev-Dipesh/Vagrant-Ansible-NewRelic-setup-for-Node.Js-on-both-Windows-and-Linux/master/img/2014-09-03%2016_29_18-PM2%20Running%20clusters.png)
