@@ -41,3 +41,7 @@ Ansible Setup
  - ElasticSearch
  - GodBox
 
+<<<<<<< HEAD
+=======
+ **NOTE: Remember to add your New Relic key in Ansible `playbook.yml`**
+>>>>>>> 3fd382f71dafdbb97c14f0a0dcf79e4c0f3e475e
