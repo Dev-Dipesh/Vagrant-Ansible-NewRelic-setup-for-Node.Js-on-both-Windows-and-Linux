@@ -1,0 +1,190 @@
+##
+# Ansible playbook for setting up a LAMP development server on Ubuntu 12.04.
+#
+
+---
+- hosts: all
+  user: vagrant
+  sudo: yes
+
+  vars_files:
+    - vars/settings.yml
+
+  tasks:
+    - name: Update apt-repository
+      action: apt update_cache=yes
+
+    ##
+    # Apt package installation of required software.
+    #
+    - name: General | Install required packages.
+      action: apt pkg={{item}} state=installed
+      with_items:
+        - unzip
+        - git
+        - vim
+        - curl
+        - mysql-server
+        - mysql-client
+        - python-mysqldb
+        - openjdk-7-jre
+        - build-essential
+
+    ##
+    # Message of the day explaining server is under control of Ansible.
+    #
+    - name: General | Message explaining server is under Ansible control.
+      action: copy src=files/update-ansible-note dest=/etc/update-motd.d/95-ansible mode=755
+
+    ##
+    # node.js installation (latest stable instead of Ubuntu's out-of-date one)
+    #
+    - name: Node.js | Package prerequisites for node.js
+      action: apt pkg=python-software-properties state=installed
+
+    - name: Node.js | Add the node.js PPA
+      action: command add-apt-repository -y ppa:chris-lea/node.js creates=/etc/apt/sources.list.d/chris-lea-node_js-precise.list
+
+    - name: Node.js | Update the apt cache for the new repository
+      action: apt update-cache=yes
+
+    - name: Node.js | Install nodejs
+      action: apt pkg={{item}} state=installed
+      with_items:
+        - nodejs
+
+    - name: Coffeescript | Install Coffeescript
+      npm: name=coffee-script global=yes
+
+    #- name: PM2 | Install PM2
+    #  npm: name=pm2 global=yes
+    #  sudo: yes
+
+    - name: Node modules | Install node modules
+      npm: path=/home/vagrant/source
+
+    # Grunt install
+    - name: Grunt Install
+      npm: name=grunt  global=yes
+
+    # Grunt-cli install
+    - name: Grunt Install
+      npm: name=grunt-cli  global=yes
+
+    # ##
+    # # Redis server (latest stable instead of Ubuntu's out-of-date one)
+    #
+    - name: Redis | Add the redis PPA
+      action: command add-apt-repository -y ppa:chris-lea/redis-server creates=/etc/apt/sources.list.d/chris-lea-redis-server-precise.list
+
+    - name: Redis | Update the apt cache for the new repository
+      action: apt update-cache=yes
+
+    - name: Redis | Install redis
+      action: apt pkg=redis-server state=installed
+
+    ##
+    # MySQL database setup.
+    - name: MySQL | Configuration file, my.cnf
+      action: template src=templates/etc-mysql-my-cnf.j2 dest=/etc/mysql/my.cnf
+
+    - name: Start MySQL
+      action: service name=mysql enabled=yes state=started
+    - include: common-tasks/mysql-secure.yml
+
+    # New Relic Setup for System Monitoring
+    - name: add newrelic repo to apt sources
+      command: echo deb http://apt.newrelic.com/debian/ newrelic non-free >> /etc/apt/sources.list.d/newrelic.list
+    - name: add newrelic key to the apt repo
+      action: apt_key url=http://download.newrelic.com/548C16BF.gpg state=present  
+    - name: update package list
+      command: apt-get update
+    - name: ensure newrelic-sysmond is installed
+      action: apt pkg=newrelic-sysmond state=installed
+    - name: update newrelic nrsysmond.cfg with license key
+      command: nrsysmond-config --set license_key=77766a2c60abd0f3d827ae258070cb9152e3254f
+    - name: start newrelic-sysmond
+      command: /etc/init.d/newrelic-sysmond start state=started  
+
+    # # ##
+    # # # MongoDb (latest stable instead of Ubuntu's out-of-date one)
+    # #
+    # - name: MongoDB | Fetch 10Gen signing key
+    #   command: apt-key adv --keyserver keyserver.ubuntu.com --recv 7F0CEB10
+    #   sudo: yes
+
+    # - name: MongoDB | Add 10Gen repository
+    #   sudo: yes
+    #   shell:
+    #     echo 'deb http://downloads-distro.mongodb.org/repo/ubuntu-upstart dist 10gen' | sudo tee /etc/apt/sources.list.d/10gen.list
+    #     creates=/etc/apt/sources.list.d/10gen.list
+
+    # - name: MongoDB | Install latest MongoDB release
+    #   apt: pkg=mongodb-10gen state=present update_cache=yes
+    #   sudo: yes
+
+    # - name: MongoDB | Push default configuration template
+    #   sudo: yes
+    #   template:
+    #     src=files/mongodb
+    #     dest=/etc/mongodb.conf
+    #     owner=root group=root mode=0644
+
+    # # Ensure service is running.
+    # - name: MongoDB | Insure deamon is running correctly
+    #   service: name=mongodb state=started
+    #   sudo: yes
+
+    ##
+    # CSS compiling tools.
+    #
+    - name: CSS | Install rubygems package
+      action: apt pkg=rubygems state=installed
+      sudo: yes
+
+    - name: CSS | Install SASS
+      action: command gem install sass creates=/usr/local/bin/sass
+      sudo: yes
+
+    - name: CSS | Install LESS
+      action: command gem install less creates=/usr/local/bin/less
+      sudo: yes
+
+    ##
+    # Install Elastic Search
+    - name: ElasticSearch | Download deb package
+      shell: wget https://download.elasticsearch.org/elasticsearch/elasticsearch/elasticsearch-0.90.5.deb
+    - name: ElasticSearch | Install package
+      shell: dpkg -i elasticsearch-0.90.5.deb
+      sudo: yes
+    - name: Start ElasticSearch
+      action: service name=elasticsearch enabled=yes state=started
+      sudo: yes
+    ##
+    # godbox to view the contents of our datastore
+    # - name: godbox | utility for viewing our derby data
+    #   git:  repo=https://github.com/share/godbox.git
+    #         dest=/home/vagrant/godbox
+    #   sudo: yes
+
+    # - name: godbox modules | Install modules
+    #   npm: path=/home/vagrant/godbox
+    #   sudo: yes
+
+    ##
+    # Start the node.js server @todo make these scripts run in the background
+    #- name: derbyjs-start
+    #  command: nohup node /home/vagrant/projects/server.js &
+
+    #- name: godbox-start
+    #  command: nohup coffee /home/vagrant/godbox/server.coffee &
+
+  # handlers:
+  #   - name: mongodb-start
+  #     service: name=mongodb start=started
+
+  #   - name: mongodb-restart
+  #     service: name=mongodb state=restarted
+
+  #   - name: mongodb-reload
+  #     service: name=mongodb state=reloaded
